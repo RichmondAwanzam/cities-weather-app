@@ -1,13 +1,14 @@
 import React,{PureComponent} from 'react'
-import { API_KEY,WEATHER_API_URL} from '../constants/app-constants'
 import {NotesLoader} from '../components/notes-loader'
-import axios from 'axios'
+import moment from 'moment'
 export default class WeatherHome extends PureComponent{
 
-    con
+
     state={
         data:[],
-        textNote:""
+        textNote:"",
+        selectedNote:null,
+        editIndex:-1
     }
     
     searchKeyChange=(evt)=>{
@@ -15,42 +16,75 @@ export default class WeatherHome extends PureComponent{
         this.setState({textNote:value})
     }
 
-    addNote=(evt)=>{
-    
+    addNote=()=>{
         let {data}=this.state
-        let copyData=[...data,this.state.textNote]
+        let copyData=[{
+            text:this.state.textNote,
+            createdOn:moment().format("DD MMM YYYY, h:mm:ss a"),
+            updatedOn:moment().format("DD MMM YYYY, h:mm:ss a")
+        },...data]
         this.setState({data:copyData ,textNote:""})
     
+    
+    }
+    updateNote(index){
+        let data = this.deleteNote(index);
+        let {selectedNote} = this.state
+        selectedNote.text = this.state.textNote;
+        let copyData=[selectedNote,...data]
+        this.setState({data:copyData ,textNote:"",editIndex:-1})
     
     }
 
     loadAvailableNotes=()=>{
         return this.state.data.map((note,index)=>{
-            return ( <NotesLoader key ={index} text={note} index={index} onDelete={this.deleteNote}/>)
+            return ( <NotesLoader key ={index} note={note} index={index} 
+                onEdit={this.editNote} 
+                onDelete={this.doDelete}/>)
         })
     }
 
-    deleteNote=(index)=>{
+    doDelete=(index)=>{
+        let dataCopy = this.deleteNote(index);
+        this.setState({data:dataCopy})
+    }
 
-        console.log("Delete Index",index)
+    deleteNote=(index)=>{
         let {data} = this.state
         let dataCopy =[...data.slice(0,index),...data.slice(index+1)];
-        this.setState({data:dataCopy})
+
+        return dataCopy;
+    }
+
+    editNote=(index)=>{
+        let editNote =this.state.data[index];
+        this.setState({textNote:editNote.text ,editIndex:index ,selectedNote:editNote})
     }
     render(){
         return (<div>
 
-            <textarea  value={this.state.textNote} onChange={this.searchKeyChange}></textarea>
+            <div>
+            <textarea className="app-textarea" value={this.state.textNote} rows={6} width="250px" placeholder ={"Write your note here ... "} onChange={this.searchKeyChange}></textarea>
+            </div>
 
-            <button onClick={this.addNote}>Add Note</button>
+            <button onClick={(evt)=>{
+                if(this.state.editIndex===-1)
+                {this.addNote();}
+                else this.updateNote(this.state.editIndex);
+            }}  disabled={this.state.textNote.trim()===""}> {this.state.editIndex===-1 ?"add Note" : "edit Note"}</button>
 
             <div>
-                <h3>Avaialable Note</h3>
+                <h3>Available Notes</h3>
+
                 <ul>
                     {
                         this.loadAvailableNotes()
                     }
                 </ul>
+                {
+                    this.state.data.length < 1 && <div>No Available Note</div>
+                }
+             
             </div>
         </div>)
     }

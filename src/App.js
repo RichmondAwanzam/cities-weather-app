@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import logo from './logo.svg';
 import './App.css';
 import WeatherHome from './containers/weather-home'
 class App extends Component {
@@ -7,7 +6,10 @@ class App extends Component {
     return (
       <div className="App">
       
-        <WeatherHome />
+      <div className="app-content">
+      <WeatherHome />
+      </div>
+       
       </div>
     );
   }
